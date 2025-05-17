@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Task Manager</title>
+    <link rel="icon" href="img/planning.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f9f9f9;
+            --text-color: #000;
+            --card-color: #fff;
+            --accent-color: #2563eb;
+            --edit-color: #facc15;
+            --delete-color: #ef4444;
+        }
+        [data-theme="dark"] {
+            --bg-color: #1e1e1e;
+            --text-color: #f1f1f1;
+            --card-color: #2e2e2e;
+            --accent-color: #3b82f6;
+            --edit-color: #eab308;
+            --delete-color: #dc2626;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--card-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .title {
+            font-size: 1.6em;
+            font-weight: bold;
+            transition: color 0.3s;
+            animation: fadeInTitle 0.5s ease-out;
+        }
+        .btn, .toggle-dark {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:hover, .toggle-dark:hover {
+            transform: scale(1.05);
+            background-color: #1d4ed8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+        .btn:active, .toggle-dark:active {
+            animation: bounce 0.2s;
+        }
+        .toggle-dark {
+            margin-left: 10px;
+        }
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task-item {
+            border-left: 4px solid #f59e0b;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f1f1f1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.3s;
+            animation: scaleIn 0.3s ease-out;
+        }
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        .task-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .task-title.done {
+            text-decoration: line-through;
+            color: gray;
+        }
+        .task-details {
+            margin-top: 6px;
+            color: gray;
+            transition: color 0.3s;
+        }
+        .progress-bar {
+            background-color: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .progress {
+            background-color: #22c55e;
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .actions button {
+            margin-left: 8px;
+            margin-bottom: 8px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: white;
+        }
+        .actions button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        .actions button:active {
+            animation: bounce 0.2s;
+        }
+        .edit {
+            background: var(--edit-color);
+        }
+        .delete {
+            background: var(--delete-color);
+        }
+        .search-bar, .task-form input, .task-form select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .search-bar:focus, .task-form input:focus, .task-form select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
+            outline: none;
+        }
+        .task-form {
+            display: none;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInTitle {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+        }
+        @media (max-width: 600px) {
+            .container { margin: 20px; padding: 15px; }
+            header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .actions button { padding: 5px 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="title">Task Manager</div>
+        <div>
+            <button class="btn" onclick="toggleForm()">+ Add Task</button>
+            <button class="toggle-dark" onclick="toggleDarkMode()">🌙</button>
+        </div>
+    </header>
+    <form class="task-form" id="taskForm" onsubmit="submitTask(event)">
+        <input type="text" id="taskTitle" placeholder="Task Title" required>
+        <input type="text" id="taskDetails" placeholder="Task Details" required>
+        <input type="date" id="taskDue" required>
+        <select id="taskPriority" required>
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+        </select>
+        <button class="btn" type="submit">Submit</button>
+    </form>
+    <input type="text" class="search-bar" placeholder="Search tasks..." oninput="searchTasks(this.value)">
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+    <ul class="task-list" id="taskList"></ul>
+</div>
+<script>
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks(filter = "") {
+        const list = document.getElementById("taskList");
+        list.innerHTML = "";
+        let completed = 0;
+        const filteredTasks = tasks.filter(task => task.title.toLowerCase().includes(filter.toLowerCase()));
+
+        filteredTasks.forEach(task => {
+            if (task.done) completed++;
+            const item = document.createElement("li");
+            item.className = "task-item";
+            item.draggable = true;
+            item.ondragstart = e => e.dataTransfer.setData("text/plain", task.id);
+            item.ondragover = e => e.preventDefault();
+            item.ondrop = e => {
+                e.preventDefault();
+                const draggedId = e.dataTransfer.getData("text/plain");
+                reorderTasks(draggedId, task.id);
+            };
+            item.innerHTML = `
+                <div class="task-header">
+                    <div>
+                        <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone(${task.id})">
+                        <span class="task-title ${task.done ? 'done' : ''}">${task.title}</span>
+                        <span style="background:#fef3c7; padding:2px 6px; border-radius:4px; font-size:0.8em; margin-left:10px">${task.priority}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="edit" onclick="editTask(${task.id})"><i class="fas fa-pencil-alt"></i> Edit</button>
+                        <button class="delete" onclick="deleteTask(${task.id})"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+                <div class="task-details">
+                    ${task.details}<br>
+                    Due: ${task.due}
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        updateProgress(filteredTasks.length ? completed / filteredTasks.length * 100 : 0);
+        saveTasks();
+    }
+
+    function toggleDone(id) {
+        const task = tasks.find(t => t.id === id);
+        if (task) task.done = !task.done;
+        renderTasks();
+    }
+
+    function editTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        document.getElementById("taskTitle").value = task.title;
+        document.getElementById("taskDetails").value = task.details;
+        document.getElementById("taskDue").value = task.due;
+        document.getElementById("taskPriority").value = task.priority;
+        deleteTask(id);
+        toggleForm(true);
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        renderTasks();
+    }
+
+    function toggleForm(show = null) {
+        const form = document.getElementById("taskForm");
+        form.style.display = show === null ? (form.style.display === "none" || form.style.display === "" ? "block" : "none") : (show ? "block" : "none");
+    }
+
+    function submitTask(event) {
+        event.preventDefault();
+        const title = document.getElementById("taskTitle").value;
+        const details = document.getElementById("taskDetails").value;
+        const due = document.getElementById("taskDue").value;
+        const priority = document.getElementById("taskPriority").value;
+        if (title && details && due && priority) {
+            tasks.push({ id: Date.now(), title, details, due, priority, done: false });
+            document.getElementById("taskForm").reset();
+            toggleForm(false);
+            renderTasks();
+        }
+    }
+
+    function updateProgress(percent) {
+        document.getElementById("progress").style.width = `${percent}%`;
+    }
+
+    function searchTasks(query) {
+        renderTasks(query);
+    }
+
+    function reorderTasks(fromId, toId) {
+        const fromIndex = tasks.findIndex(t => t.id == fromId);
+        const toIndex = tasks.findIndex(t => t.id == toId);
+        if (fromIndex < 0 || toIndex < 0) return;
+        const [movedTask] = tasks.splice(fromIndex, 1);
+        tasks.splice(toIndex, 0, movedTask);
+        renderTasks();
+    }
+
+    function toggleDarkMode() {
+        const html = document.documentElement;
+        html.dataset.theme = html.dataset.theme === "dark" ? "light" : "dark";
+    }
+
+    renderTasks();
+</script>
+</body>
+</html>
